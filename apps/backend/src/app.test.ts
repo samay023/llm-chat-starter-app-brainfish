@@ -14,10 +14,10 @@ import { OpenAI } from "openai";
 const mocks = vi.hoisted(() => {
   return {
     create: vi.fn(),
-  }
-})
+  };
+});
 
-vi.mock('openai', () => ({
+vi.mock("openai", () => ({
   OpenAI: vi.fn().mockImplementation(() => ({
     chat: {
       completions: {
@@ -136,6 +136,42 @@ describe("Backend API Tests", () => {
       }
 
       expect(chunks).toEqual(["Hello", " ", "world"]);
+    });
+
+    it("should handle base64 PDF file input", async () => {
+      // Sample base64 for a simple PDF file with text "testing a comment in base 64"
+      const sampleBase64 = "dGVzdGluZyBhIGNvbW1lbnQgaW4gYmFzZSA2NA==";
+
+      const res = await app.request("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "user",
+              content: `Please analyze the file. ${Buffer.from(
+                sampleBase64,
+                "base64"
+              ).toString("utf-8")}`,
+            },
+          ],
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      expect(mocks.create).toHaveBeenCalledTimes(1);
+
+      // Verify that the extracted text from PDF is included in the messages sent to OpenAI
+      const calledWith = mocks.create.mock.calls[0][0];
+      expect(calledWith.messages[0].content).toContain(
+        "testing a comment in base 64"
+      );
+      expect(calledWith.messages[0].role).toBe("user");
+      expect(calledWith).toMatchObject({
+        model: "gpt-4o-mini",
+        temperature: 0.7,
+        stream: true,
+      });
     });
 
     it("should handle OpenAI errors gracefully", async () => {
