@@ -96,3 +96,7 @@ Note: Frontend tests are not currently set up.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Todo:
+
+File Upload: Implement drag-and-drop file upload and processing (e.g., summarize or extract text).

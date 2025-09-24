@@ -15,5 +15,8 @@
     "concurrently": "^8.2.2",
     "typescript": "^5.4.2"
   },
-  "packageManager": "yarn@4.9.1"
+  "packageManager": "yarn@4.10.3",
+  "dependencies": {
+    "@bingsjs/pdf-parse": "^1.1.1"
+  }
 }

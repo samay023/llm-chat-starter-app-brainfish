@@ -7,9 +7,15 @@ import { useMessages } from "@/store/messages";
 
 interface ChatInputProps {
   onTypingChange: (isTyping: boolean) => void;
+  droppedFile?: string | null;
+  onClearFile?: () => void;
 }
 
-export const ChatInput = ({ onTypingChange }: ChatInputProps) => {
+export const ChatInput = ({
+  onTypingChange,
+  droppedFile,
+  onClearFile,
+}: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { messages, addMessage, updateLastMessage } = useMessages();
@@ -32,6 +38,7 @@ export const ChatInput = ({ onTypingChange }: ChatInputProps) => {
     addMessage({
       role: "user",
       content: input,
+      file: droppedFile || undefined,
     });
 
     // Add empty assistant message that will be streamed
@@ -51,12 +58,14 @@ export const ChatInput = ({ onTypingChange }: ChatInputProps) => {
         },
         body: JSON.stringify({
           messages: [...messages, { role: "user", content: input }],
+          file: droppedFile || undefined,
         }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to get response");
       }
+      onClearFile?.();
 
       const reader = response.body?.getReader();
       if (!reader) throw new Error("No reader available");
@@ -92,21 +101,29 @@ export const ChatInput = ({ onTypingChange }: ChatInputProps) => {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex w-full items-center space-x-3 bg-muted rounded-lg p-4"
-    >
-      <Input
-        ref={inputRef}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Type your message..."
-        className="flex-1 px-4 py-6 text-base"
-        disabled={isLoading}
-      />
-      <Button type="submit" className="size-12" disabled={isLoading}>
-        <Send className="h-4 w-4" />
-      </Button>
-    </form>
+    <>
+      <form
+        onSubmit={handleSubmit}
+        className="flex w-full items-center space-x-3 bg-muted rounded-lg p-4"
+      >
+        <Input
+          ref={inputRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Type your message..."
+          className="flex-1 px-4 py-6 text-base"
+          disabled={isLoading}
+        />
+        <Button type="submit" className="size-12" disabled={isLoading}>
+          <Send className="h-4 w-4" />
+        </Button>
+      </form>
+
+      <p className="text-sm text-muted-foreground p-2">
+        {droppedFile
+          ? "📄 PDF is attached and will be used as context"
+          : "📎 Drag and drop a PDF to attach it to the next message"}
+      </p>
+    </>
   );
 };

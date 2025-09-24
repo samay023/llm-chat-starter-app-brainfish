@@ -5,6 +5,7 @@ import { cors } from "hono/cors";
 import { streamSSE } from "hono/streaming";
 import { OpenAI } from "openai";
 import { z } from "zod";
+import pdf from "@bingsjs/pdf-parse";
 
 // Create OpenAI client
 const openai = new OpenAI({
@@ -34,14 +35,29 @@ app.post(
           content: z.string(),
         })
       ),
+      file: z.string().optional(),
     })
   ),
   async (c) => {
     try {
-      const { messages } = c.req.valid("json");
+      const { messages, file } = c.req.valid("json");
 
       if (!messages?.length) {
         return c.json({ error: "Messages are required" }, 400);
+      }
+
+      if (file) {
+        const buffer = Buffer.from(file, "base64");
+
+        const pdfData = await pdf(buffer);
+        const fileText = pdfData.text;
+
+        if (fileText) {
+          messages.push({
+            role: "user",
+            content: `Extracted text from the uploaded PDF:\n\n${fileText}`,
+          });
+        }
       }
 
       const aiStream = await openai.chat.completions.create({
@@ -67,4 +83,3 @@ app.post(
     }
   }
 );
-

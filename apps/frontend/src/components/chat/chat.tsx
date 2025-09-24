@@ -4,7 +4,12 @@ import { ChatInput } from "@/components/chat/chat-input";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { useMessages } from "@/store/messages";
 
-export const Chat = () => {
+interface Props {
+  droppedFile?: string | null;
+  onClearFile?: () => void;
+}
+
+export const Chat = ({ droppedFile, onClearFile }: Props) => {
   const { messages } = useMessages();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -45,7 +50,11 @@ export const Chat = () => {
       </div>
       <div className="w-full bg-background z-20 p-4 border-t">
         <div className="max-w-screen-md mx-auto">
-          <ChatInput onTypingChange={setIsTyping} />
+          <ChatInput
+            onTypingChange={setIsTyping}
+            droppedFile={droppedFile}
+            onClearFile={onClearFile}
+          />
         </div>
       </div>
     </div>
